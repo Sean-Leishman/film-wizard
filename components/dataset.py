@@ -1,13 +1,16 @@
 import pandas as pd
 import json
+import os
 
 class MoviesData:
   def __init__(self) -> None:
-    self.load_dataset()
+    cwd = os.path.realpath(__file__)
+    file_loc = '/'.join(cwd.split('/')[:-2]) + '/datasets/movies/movies_metadata.csv'
+    self.load_dataset(file_loc)
     pass
 
-  def load_dataset(self):
-    df = pd.read_csv('datasets/movies/movies_metadata.csv')
+  def load_dataset(self, file_loc):
+    df = pd.read_csv(file_loc)
     print(df.head())
     print(df.iloc[0]['belongs_to_collection'])
     print(df.columns)
