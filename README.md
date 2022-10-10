@@ -10,6 +10,11 @@
 #### Movies Wiki Dataset
 * Download Movies Wiki dataset from ``````
 
+### Scraper Setup
+* Download ChromeDriver from ```https://chromedriver.chromium.org/downloads```
+* Move ChromeDriver to ```/data_scraper/bin```
+* ```pip3 install selenium```
+
 ### Architecture
 * chatbot <- dialog_flow, qna_chatbot
 * dialog_flow <- recommender, profile_generator
