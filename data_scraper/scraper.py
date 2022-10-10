@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 
 # options
 options = Options()
-options.headless = True
+options.headless = True # allow chrome to run in background
 options.add_argument("--window-size=1920,1200")
 
 # run driver
@@ -13,6 +13,8 @@ cwd = os.path.realpath(__file__)
 DRIVER_PATH = '/'.join(cwd.split('/')[:-1]) + '/bin/chromedriver'
 driver = webdriver.Chrome(options=options, executable_path=DRIVER_PATH)
 driver.get('https://google.com')
+
+# driver
 # print(driver.page_source)
 print(driver.title)
 print(driver.current_url)
