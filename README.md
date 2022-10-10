@@ -15,6 +15,10 @@
 * Move ChromeDriver to ```/data_scraper/bin```
 * ```pip3 install selenium```
 
+### Commands
+* Run Scraper ```python3 ./data_scraper/scraper.py```
+* Run Chatbot ```python3 ./chatbot.py```
+
 ### Architecture
 * chatbot <- dialog_flow, qna_chatbot
 * dialog_flow <- recommender, profile_generator
