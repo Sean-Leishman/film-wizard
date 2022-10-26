@@ -28,11 +28,13 @@ class Driver():
         self.driver.get(link)
         entire_page = self.driver.find_element(By.XPATH, '//*[@id="mw-content-text"]')
         paragraphs = entire_page.find_elements(By.TAG_NAME, 'p')
-        list_items = entire_page.find_elements(By.TAG_NAME, 'li')
 
+        list_items = entire_page.find_elements(By.XPATH,'//*[@class="mw-parser-output"]/ul/li')
         combined_paragraph = ""
         for paragraph in paragraphs:
             combined_paragraph += paragraph.get_attribute('textContent')
+        for list in list_items:
+            combined_paragraph += list.text
         combined_paragraph = combined_paragraph.strip()
         return combined_paragraph
 
