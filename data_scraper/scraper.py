@@ -8,40 +8,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from SPARQLWrapper import SPARQLWrapper, JSON
 import pandas as pd
 
-class WikiDataQuery():
-    def __init__(self):
-        self.sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
-        self.links = None
-        self.get_films()
-
-    def get_film(self,id):
-        if "tt" not in id:
-            id = "tt"+id
-        if (self.links["IMDb_ID.value"] == id).sum() > 0:
-            return self.links.loc[self.links["IMDb_ID.value"] == id]['sitelink.value'].values[0]
-        else:
-            raise KeyError
-
-    def get_films(self):
-        self.sparql.setQuery("""SELECT ?item ?IMDb_ID ?sitelink WHERE {
-              {
-                {
-              ?item wdt:P31 /wdt:P279* wd:Q11424 .
-              ?item wdt:P345 ?IMDb_ID .
-              ?sitelink schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> .
-                  }
-                }
-              UNION{
-                ?item wdt:P31 /wdt:P279* wd:Q24869 .
-                ?item wdt:P345 ?IMDb_ID .
-                ?sitelink schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> .
-                }
-            }""")
-        self.sparql.setReturnFormat(JSON)
-        results = self.sparql.query().convert()
-        results_df = pd.json_normalize(results['results']['bindings'])
-        self.links = results_df[['IMDb_ID.value', 'sitelink.value']]
-
 class Driver():
     def __init__(self):
         self.options = Options()
@@ -57,6 +23,7 @@ class Driver():
             raise KeyError
 
     def get_paragraph(self, wiki_url):
+        print(wiki_url)
         link = self.get_film(wiki_url)
         self.driver.get(link)
         entire_page = self.driver.find_element(By.XPATH, '//*[@id="mw-content-text"]')
@@ -67,10 +34,16 @@ class Driver():
         for paragraph in paragraphs:
             combined_paragraph += paragraph.get_attribute('textContent')
         combined_paragraph = combined_paragraph.strip()
-        print(wiki_url)
         return combined_paragraph
 
 if __name__ == "__main__":
     driver = Driver()
-    for row in driver.links.T:
-        driver.get_paragraph(driver.links.iloc[row]['wikipediaId'])
+    # Toy Story,
+    example_urls = [862,807,11,274870,339403]
+    example_paths = ["toy_story.txt", "seven.txt", "star_wars.txt", "passengers.txt", "baby_driver.txt"]
+
+    for idx,url in enumerate(example_urls):
+        print(driver.links.loc[driver.links.id == url]['wikipediaId'].values[0])
+        para = driver.get_paragraph(driver.links.loc[driver.links.id == url]['wikipediaId'].values[0])
+        with open("examples/"+example_paths[idx], "w", encoding="utf-8") as f:
+            f.writelines(para)
