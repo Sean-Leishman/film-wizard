@@ -12,9 +12,8 @@ class Driver():
     def __init__(self):
         self.options = Options()
         self.options.headless = True
-        #self.options.add_argument("--window-size=1920,1200")
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.options)
-        self.links = pd.read_csv('../source/final_comparison_df.csv')
+        self.links = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__),'..', 'source','final_comparison_df.csv')))
 
     def generate_paragraph(self,wiki_url):
         self.driver.get(wiki_url)
@@ -30,20 +29,20 @@ class Driver():
         combined_paragraph = combined_paragraph.strip()
         return combined_paragraph
 
-    def get_paragraphs(self, movie_rows):
+    def get_paragraphs_by_movie_rows(self, movie_rows):
         wiki_urls = [movie_row.wikipediaUrl for movie_row in movie_rows]
         combined_paragraphs = [self.generate_paragraph(wiki_url) for wiki_url in wiki_urls]
 
         return combined_paragraphs
 
-
-
-
+    def get_paragraphs_by_wiki_urls(self, wiki_urls):
+        combined_paragraphs = [self.generate_paragraph(wiki_url) for wiki_url in wiki_urls]
+        return combined_paragraphs
 
 if __name__ == "__main__":
     driver = Driver()
     # Toy Story
-    print(driver.get_paragraph("https://en.wikipedia.org/wiki/Toy_Story"))
+    print(driver.get_paragraphs_by_wiki_urls(["https://en.wikipedia.org/wiki/Toy_Story"]))
     """example_urls = [862,807,11,274870,339403]
     example_paths = ["toy_story.txt", "seven.txt", "star_wars.txt", "passengers.txt", "baby_driver.txt"]
 
