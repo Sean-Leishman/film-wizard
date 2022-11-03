@@ -1,5 +1,5 @@
 /datasets
-/data_cleaning
+/data_cleaning/datasets
 /data_scraper/bin
 .DS_Store
 /venv
