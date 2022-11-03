@@ -14,22 +14,14 @@ class Driver():
         self.options.headless = True
         #self.options.add_argument("--window-size=1920,1200")
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.options)
-        self.links = pd.read_csv('../datasets/movies/master.csv')
+        self.links = pd.read_csv('../source/final_comparison_df.csv')
 
-    def get_film(self, wiki_url):
-        if self.links.loc[self.links.wikipediaId == wiki_url].shape[0] == 1:
-            return wiki_url
-        else:
-            raise KeyError
-
-    def get_paragraph(self, wiki_url):
-        print(wiki_url)
-        link = self.get_film(wiki_url)
-        self.driver.get(link)
+    def generate_paragraph(self,wiki_url):
+        self.driver.get(wiki_url)
         entire_page = self.driver.find_element(By.XPATH, '//*[@id="mw-content-text"]')
         paragraphs = entire_page.find_elements(By.TAG_NAME, 'p')
 
-        list_items = entire_page.find_elements(By.XPATH,'//*[@class="mw-parser-output"]/ul/li')
+        list_items = entire_page.find_elements(By.XPATH, '//*[@class="mw-parser-output"]/ul/li')
         combined_paragraph = ""
         for paragraph in paragraphs:
             combined_paragraph += paragraph.get_attribute('textContent')
@@ -38,14 +30,25 @@ class Driver():
         combined_paragraph = combined_paragraph.strip()
         return combined_paragraph
 
+    def get_paragraphs(self, movie_rows):
+        wiki_urls = [movie_row.wikipediaUrl for movie_row in movie_rows]
+        combined_paragraphs = [self.generate_paragraph(wiki_url) for wiki_url in wiki_urls]
+
+        return combined_paragraphs
+
+
+
+
+
 if __name__ == "__main__":
     driver = Driver()
-    # Toy Story,
-    example_urls = [862,807,11,274870,339403]
+    # Toy Story
+    print(driver.get_paragraph("https://en.wikipedia.org/wiki/Toy_Story"))
+    """example_urls = [862,807,11,274870,339403]
     example_paths = ["toy_story.txt", "seven.txt", "star_wars.txt", "passengers.txt", "baby_driver.txt"]
 
     for idx,url in enumerate(example_urls):
         print(driver.links.loc[driver.links.id == url]['wikipediaId'].values[0])
         para = driver.get_paragraph(driver.links.loc[driver.links.id == url]['wikipediaId'].values[0])
         with open("examples/"+example_paths[idx], "w", encoding="utf-8") as f:
-            f.writelines(para)
+            f.writelines(para)"""
