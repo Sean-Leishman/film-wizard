@@ -23,13 +23,14 @@ def clean_words(text:str):
 
     return " ".join(filtered_sentence)
 
-def recommend(query:str):
+def recommend(query):
     movie_metadata = pd.read_csv("data_cleaning/datasets/final_comparison_df.csv")
     corpus = movie_metadata['bag_of_words'].to_list()
     tokenized_corpus = [doc.split(" ") for doc in corpus]
     bm25 = BM25Okapi(tokenized_corpus)
 
     #query = "disney princess."
+    print('query: ', query)
     query_joined = " ".join(query)
     cleaned_query = clean_words(query_joined)
     tokenized_query = cleaned_query.split(" ")

@@ -29,8 +29,15 @@ def send(event=None):
     responses = chatbot_frame.get_input_respond_message_for_movie_recommender(usr_input)
 
     for response in responses:
-        textcon.config(fg='yellow')
-        textcon.insert(END, "BOT: " + response + "\n")
+        if isinstance(response, str):
+            #If it's a string
+            textcon.config(fg='yellow')
+            textcon.insert(END, "BOT: " + response + "\n")
+        else:
+            #If it detects a method called
+            result = response()
+            textcon.config(fg='yellow')
+            textcon.insert(END, "BOT: " + result + "\n")
 
 root.resizable(False, False)
 main_menu=Menu(root)
