@@ -12,7 +12,6 @@ from flashtext import KeywordProcessor
     The purpose of this class is to build out the functions and methods so we can store the information in an easy and accessible way.
 """
 
-
 class MovieRecommender():
 
     def __init__(self, extracted_keywords: list, chatbot_mode='intent_detection'):
@@ -42,27 +41,84 @@ class MovieRecommender():
         self.prompt_type = 'prompt'
 
         # Load just once so we don't load like 10 million times.
-        self.tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
-        self.model = AutoModelForTokenClassification.from_pretrained(
-            "dslim/bert-base-NER")
-        self.ner_pipeline = pipeline(
-            "ner", model=self.model, tokenizer=self.tokenizer, grouped_entities=True)
+        self.tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER-uncased")
+        self.model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER-uncased")
+        self.ner_pipeline = pipeline("ner", model=self.model, tokenizer=self.tokenizer, grouped_entities=True)
 
-    def ner_recognition(self, input):
-        #input_rejoin = " ".join(input)
-        ner_results = self.ner_pipeline(input)
+        #Intent keywords list:
+        self.intent = {'hello': {'hello', 'hi', 'how do you do', 'howdy', 'hullo'},
+                    'reset': {'reset', 'quit'},
+                    'quit': {'cease','chuck up the sponge', 'depart', 'discontinue', 'drop by the wayside', 'give up', 'lay off', 'quit', 'relinquish', 'renounce', 'resign', 'step down', 'stop', 'take leave', 'throw in', 'throw in the towel'},
+                    'recommend': {'advocate', 'commend', 'recommend', 'urge', 'recommended'},
+                    'no': {'none', 'nothing', 'no', 'no more', 'not interested', "i don't know"},
+                    'movie': {'film', 'flick', 'motion picture', 'motion picture show', 'movie', 'moving picture', 'moving picture show', 'picture show'}}
+        
+        self.intent_keys = list(self.intent.keys())
 
-        entities = []
-        ans = self.tokenizer.convert_tokens_to_string(entities)
-        print('ANS', ans)
-        for entity in ner_results:
-            entities.append(entity)
+        self.intent_response = {
+            'reply_greet_general': 'Hello back to you!',
+            'reply_fallback_general': "I don't quite understand you, could you clarify your question?",
+            'reply_movie_recommended': "Thank you! Please go through our prompts as they appear! Type reset/quit to quit the recommender mode",
+            'reply_reset': "It appears you'll like to reset your chat, all status wiped!"
+        }
 
-        return entities
+    def convo(self, input):
+        ## There are three different modes, intent detection, recommender mode and qa
 
-    # This is to check which protocol the user wants to trigger
-    def intent_detection(self, input):
-        pass
+        #What to respond back
+        response_list = []
+
+        if self.chatbot_mode == 'intent_detection':
+
+            input_lower = input.lower()
+            
+            convo_keyword_proc  = KeywordProcessor()
+            intent_detected = []
+            
+            for intent,pattern in self.intent.items():
+                convo_keyword_proc.add_keywords_from_list(list(pattern))
+
+                if len(convo_keyword_proc.extract_keywords(input_lower)) > 0:
+                    intent_detected.append(intent) 
+
+                convo_keyword_proc.remove_keywords_from_list(list(pattern))
+            
+            if len(intent_detected) == 0:
+                return [self.intent_response['reply_fallback_general']]
+
+            else:
+                print('intent detected', intent_detected)
+                for intent in intent_detected:
+                    if intent == "hello":
+                        response_list.append(self.intent_response['reply_greet_general'])
+                    elif intent == "recommend":
+                        #Going into the movie pipeline
+                        response_list.append(self.response_generator_for_recommender('prompt_genre'))
+                        self.chatbot_mode =  'movie_recommender'
+            
+            return response_list
+            
+        elif self.chatbot_mode == 'movie_recommender':
+
+            #Check if user wants to reset
+            if self.reset_convo(input) == False:
+                respond_results = self.get_input_respond_message_for_movie_recommender(input)
+            else:
+                #Go back to intent detection
+                self.tracker = 0
+                self.chatbot_mode = 'intent_detection'
+                return [self.intent_response['reply_reset']]
+
+            return respond_results
+
+        elif self.chatbot_mode == 'qa':
+            #what to say during QA part
+            pass
+    
+    def reset_convo(self, input):
+        if input.lower() == "quit" or input.lower() == "reset":
+            return True
+        return False
 
     def recommend_movies(self):
         movie_result = rec.recommend(self.extracted_keywords)
@@ -79,7 +135,7 @@ class MovieRecommender():
             If it goes into response generator mode, it will strictly follow this list!
         """
         responses = {
-            'prompt_greet': 'Hello, welcome to our site! Would you like to have a movie recommended?',
+            'prompt_greet': 'Hello, welcome to our site! Would you like to have a movie recommended? Type reset to stop anytime!',
             'reply_greet': "Awesome! Let's begin!",
             'reply_generic_response': 'Thank you for the reply!',
             'prompt_genre': 'What genre of shows do you like?',
@@ -102,16 +158,25 @@ class MovieRecommender():
     def get_input_respond_message_for_movie_recommender(self, input: str):
 
         temp_impt_keywords = []  # This will be appended into recommender
+        skip_mode = False
+
+        #Check if users wants to skip this question
+        
+        no_keyword_proc  = KeywordProcessor()
+        no_keyword_proc.add_keywords_from_list(list(self.intent['no']))
+
+        want_to_skip_intent = no_keyword_proc.extract_keywords(input)
+
+        if len(want_to_skip_intent) > 0:
+            skip_mode = True
 
         # The below is the prompt respond logic
         list_of_prompt_response = [
             #{'prompt_greet': ['reply_greet', 'prompt_genre']},
             {'prompt_genre': ['reply_generic_response', 'prompt_shows']},
             {'prompt_shows': ['reply_generic_response', 'prompt_actor']},
-            {'prompt_actor': ['reply_generic_response',
-                              'prompt_production_companies']},
-            {'prompt_production_companies': [
-                'reply_generic_response', 'prompt_themes']},
+            {'prompt_actor': ['reply_generic_response','prompt_production_companies']},
+            {'prompt_production_companies': ['reply_generic_response', 'prompt_themes']},
             {'prompt_themes': ['reply_searching', 'reply_list_of_movies']},
             {'reply_list_of_movies': ['reply_end']}
         ]
@@ -126,54 +191,56 @@ class MovieRecommender():
         truecase_input = truecase.get_true_case(input)
         print(truecase_input)
 
-        if prompt_type == 'prompt_genre':
-            # Specify what actions to take to retrieve the relevant keywords
-            # For genres, we can just look at the genre keyword list
-            # for word in input_list_breakdown:
-            #     if word in self.genre_set or self.keywords_set:
-            #         temp_impt_keywords.append(word)
-            # print(temp_impt_keywords)
-            detected_keywords = self.find_words_phrases_from_keywords(
-                input.lower())
-            print(detected_keywords)
-            temp_impt_keywords.extend(detected_keywords)
+        #If there's no skip
+        if skip_mode == False:
 
-        elif prompt_type == 'prompt_shows':
-            # We will use NER to extract relevant topics
-            detected_ner = self.ner_recognition(truecase_input)
-            print(detected_ner)
-            temp_impt_keywords.extend(detected_ner)
+            if prompt_type == 'prompt_genre':
+                # Specify what actions to take to retrieve the relevant keywords
+                # For genres, we can just look at the genre keyword list
+                # for word in input_list_breakdown:
+                #     if word in self.genre_set or self.keywords_set:
+                #         temp_impt_keywords.append(word)
+                # print(temp_impt_keywords)
+                detected_keywords = self.find_words_phrases_from_keywords(input.lower())
+                print(detected_keywords)
+                temp_impt_keywords.extend(detected_keywords)
 
-        elif prompt_type == 'prompt_actor':
-            # We will use NER to extract relevant topics
-            detected_ner = self.ner_recognition(truecase_input)
-            print(detected_ner)
-            temp_impt_keywords.extend(detected_ner)
+            elif prompt_type == 'prompt_shows':
+                # We will use NER to extract relevant topics
+                detected_ner = self.ner_recognition(input)
+                print(detected_ner)
+                temp_impt_keywords.extend(detected_ner)
 
-        elif prompt_type == 'prompt_production_companies':
-            detected_ner = self.ner_recognition(truecase_input)
-            print(detected_ner)
-            temp_impt_keywords.extend(detected_ner)
+            elif prompt_type == 'prompt_actor':
+                # We will use NER to extract relevant topics
+                detected_ner = self.ner_recognition(input)
+                print(detected_ner)
+                temp_impt_keywords.extend(detected_ner)
 
-        elif prompt_type == 'prompt_themes':
-            # This is the catch all part
-            detected_ner = self.ner_recognition(truecase_input)
-            print(detected_ner)
-            temp_impt_keywords.extend(detected_ner)
+            elif prompt_type == 'prompt_production_companies':
+                detected_ner = self.ner_recognition(input)
+                print(detected_ner)
+                temp_impt_keywords.extend(detected_ner)
 
-            detected_keywords = self.find_words_phrases_from_keywords(
-                input.lower())
-            print(detected_keywords)
-            temp_impt_keywords.extend(detected_keywords)
+            elif prompt_type == 'prompt_themes':
+                # This is the catch all part
+                detected_ner = self.ner_recognition(input)
+                print(detected_ner)
+                temp_impt_keywords.extend(detected_ner)
 
-            # Remove duplicate if any
-            temp_impt_keywords = list(set(temp_impt_keywords))
+                detected_keywords = self.find_words_phrases_from_keywords(
+                    input.lower())
+                print(detected_keywords)
+                temp_impt_keywords.extend(detected_keywords)
 
-        # If no keywords are detected
-        if self.isNestedListEmpty(temp_impt_keywords):
-            return [self.response_generator_for_recommender('reply_fallback')]
+                # Remove duplicate if any
+                temp_impt_keywords = list(set(temp_impt_keywords))
 
-        self.extracted_keywords.extend(temp_impt_keywords)
+            # If no keywords are detected
+            if self.isNestedListEmpty(temp_impt_keywords):
+                return [self.response_generator_for_recommender('reply_fallback')]
+
+            self.extracted_keywords.extend(temp_impt_keywords)
 
         # Return the response of the prompt
 
@@ -186,6 +253,14 @@ class MovieRecommender():
                 self.response_generator_for_recommender(response_from_prompt))
 
         return responses_result
+
+    def ner_recognition(self, input):
+        #input_rejoin = " ".join(input)
+        ner_results = self.ner_pipeline(input)
+
+        entities = self.link_related_ner_together(ner_results)
+
+        return entities
 
     def breakdown_input_into_list(self, input: str):
         input_list = input.split(" ")
@@ -207,3 +282,27 @@ class MovieRecommender():
     def find_words_phrases_from_keywords(self, sentence):
         keywords_found = self.keyword_processor.extract_keywords(sentence)
         return keywords_found
+    
+    def link_related_ner_together(self, ner_entities):
+            i = 0
+            keywords =  []
+            while i < len(ner_entities):
+                word = ner_entities[i]['word']
+                next_num = i+1
+                print(len(ner_entities)-1)
+                if (next_num) > (len(ner_entities) - 1):
+                    keywords.append(word)
+                    i+=1
+                else:
+                    if '#' in ner_entities[i+1]['word']:
+                        print('here')
+                        keywords.append(word + ner_entities[i+1]['word'].lstrip('#'))
+                        i+=2
+                    else:
+                        keywords.append(word)
+                        i+=1
+            return keywords
+                    
+
+
+

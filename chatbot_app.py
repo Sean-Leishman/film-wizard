@@ -4,7 +4,7 @@ import chatbot_class as cs
 
 
 root=tk.Tk()
-root.title(f"Chat Bot")
+root.title(f"Movie Recommender Chat Bot")
 root.geometry('500x400')
 text_contents = dict()
 
@@ -22,11 +22,12 @@ def clear(event=None):
 
 def send(event=None):
     usr_input = message.get()
-    usr_input = usr_input.lower()
+    usr_input = usr_input
 
     textcon.insert(END, f'User: {usr_input}'+'\n','usr')
 
-    responses = chatbot_frame.get_input_respond_message_for_movie_recommender(usr_input)
+    #responses = chatbot_frame.get_input_respond_message_for_movie_recommender(usr_input)
+    responses = chatbot_frame.convo(usr_input)
 
     for response in responses:
         if isinstance(response, str):
@@ -56,7 +57,7 @@ mes_win.place(x=6,y=310,height=60,width=366)
 mes_win.focus()
 textcon.config(fg='yellow')
 textcon.tag_config('usr',foreground='white')
-textcon.insert(END,"Bot: This is your chat bot to assist you about Machine Learning!\n\n")
+textcon.insert(END,"Bot: Welcome to our Movie Recommender, how may I assist you?\n\n")
 mssg=mes_win.get()
 button=Button(root,text='Send',bg='yellow',activebackground='orange',command=send,width=12,height=5,font=('Arial'))
 button.place(x=376,y=310,height=60,width=110)
