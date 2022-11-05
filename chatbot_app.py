@@ -22,6 +22,7 @@ def clear(event=None):
 
 def send(event=None):
     usr_input = message.get()
+    message.set('')
     usr_input = usr_input
 
     textcon.insert(END, f'User: {usr_input}'+'\n','usr')
@@ -68,4 +69,5 @@ scrollbar.config(command = textcon.yview)
 content = widget_get()
 text_contents[str(textcon)] = hash(content)
 root.bind('<Delete>', clear,edit_menu)
+root.bind('<Return>', send)
 root.mainloop()
