@@ -12,7 +12,7 @@ from flashtext import KeywordProcessor
     The purpose of this class is to build out the functions and methods so we can store the information in an easy and accessible way.
 """
 
-class MovieRecommender():
+class ChatbotFramework():
 
     def __init__(self, extracted_keywords: list, chatbot_mode='intent_detection'):
         """

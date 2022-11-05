@@ -9,7 +9,7 @@ root.geometry('500x400')
 text_contents = dict()
 
 extracted_keywords = []
-chatbot_frame = cs.MovieRecommender(extracted_keywords = extracted_keywords)
+chatbot_frame = cs.ChatbotFramework(extracted_keywords = extracted_keywords)
 
 def widget_get():
     text_widget = root.nametowidget(textcon)
