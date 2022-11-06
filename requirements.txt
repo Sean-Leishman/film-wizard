@@ -1,0 +1,6 @@
+streamlit
+streamlit-chat
+rake-nltk
+rank-bm25
+transformers
+truecase
