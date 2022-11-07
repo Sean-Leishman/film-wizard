@@ -47,12 +47,25 @@ class ChatbotFramework():
 
         #Intent keywords list:
         self.intent = {'hello': {'hello', 'hi', 'how do you do', 'howdy', 'hullo'},
+<<<<<<< HEAD
+                       'reset': {'reset', 'quit'},
+                       'quit': {'cease', 'chuck up the sponge', 'depart', 'discontinue', 'drop by the wayside',
+                                'give up', 'lay off', 'quit', 'relinquish', 'renounce', 'resign', 'step down', 'stop',
+                                'take leave', 'throw in', 'throw in the towel'},
+                       'recommend': {'advocate', 'commend', 'recommend', 'urge', 'recommended', 'recommendation'},
+                       'no': {'none', 'nothing', 'no', 'no more', 'not interested', "i don't know"},
+                       'movie': {'film', 'flick', 'motion picture', 'motion picture show', 'movie', 'moving picture',
+                                 'moving picture show', 'picture show'},
+                       'qa': {"enquire", "questions", "ask", "query", "want to know", "question"}}
+
+=======
                     'reset': {'reset', 'quit'},
                     'quit': {'cease','chuck up the sponge', 'depart', 'discontinue', 'drop by the wayside', 'give up', 'lay off', 'quit', 'relinquish', 'renounce', 'resign', 'step down', 'stop', 'take leave', 'throw in', 'throw in the towel'},
                     'recommend': {'advocate', 'commend', 'recommend', 'urge', 'recommended'},
                     'no': {'none', 'nothing', 'no', 'no more', 'not interested', "i don't know"},
                     'movie': {'film', 'flick', 'motion picture', 'motion picture show', 'movie', 'moving picture', 'moving picture show', 'picture show'}}
         
+>>>>>>> parent of f44227c (change to master without models)
         self.intent_keys = list(self.intent.keys())
 
         self.intent_response = {
@@ -99,8 +112,13 @@ class ChatbotFramework():
             return response_list
             
         elif self.chatbot_mode == 'movie_recommender':
+<<<<<<< HEAD
+            print("enter movie recommender")
+            # Check if user wants to reset
+=======
 
             #Check if user wants to reset
+>>>>>>> parent of f44227c (change to master without models)
             if self.reset_convo(input) == False:
                 respond_results = self.get_input_respond_message_for_movie_recommender(input)
             else:
@@ -304,5 +322,15 @@ class ChatbotFramework():
             return keywords
                     
 
+<<<<<<< HEAD
+    def qa_question_chatbot(self, movie_name):
+        qa_model = QA_Chat("./models/distilbert-QuAC-SQUAD", movie_name)
+        return qa_model
 
+    def qa_mode(self):
+        self.chatbot_mode = "qa"
+        return "Switching to QA Mode. Type in the name of the movie you would like to answer Questions for"
+=======
+
+>>>>>>> parent of f44227c (change to master without models)
 
