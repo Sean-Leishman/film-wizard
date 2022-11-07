@@ -1,4 +1,6 @@
 import os
+import re
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -30,7 +32,20 @@ class Driver():
         return combined_paragraph
 
     def split_paragraph(self,string):
-        return [string[x:x+500] for x in range(0,len(string), 500)]
+        last_space_idx = 0
+        last_space_indicies = []
+        space_after_last_idx = 500
+        for idx, x in enumerate(string):
+            if x == ".":
+                last_space_idx = idx+1
+            if idx % space_after_last_idx == 0:
+                last_space_indicies.append(last_space_idx)
+                space_after_last_idx = last_space_idx + 500
+        last_space_indicies.append(len(string))
+        strings = [string[last_space_indicies[x-1]:last_space_indicies[x]] for x in range(1,len(last_space_indicies))]
+        replacement_pattern = '\[.*?\]'
+        strings = [(re.sub(replacement_pattern, "", x)).strip() for x in strings]
+        return strings
 
     def get_paragraphs_by_movie_rows(self, movie_rows):
         wiki_urls = [movie_row.wikipediaUrl for movie_row in movie_rows]
@@ -45,7 +60,8 @@ if __name__ == "__main__":
     driver = Driver()
     # Toy Story
     st = driver.get_paragraphs_by_wiki_urls(["https://en.wikipedia.org/wiki/Toy_Story"])
-
+    for x in st[0]:
+        print("[",x[:50],"..],")
     """example_urls = [862,807,11,274870,339403]
     example_paths = ["toy_story.txt", "seven.txt", "star_wars.txt", "passengers.txt", "baby_driver.txt"]
 
