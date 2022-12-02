@@ -3,3 +3,11 @@
 /data_scraper/bin
 .DS_Store
 /venv
+/models
+/QA_models/nq_dev
+/QA_models/nq_train
+/QA_models/quac_dev
+/QA_models/quac_train
+/QA_models/train-v2.0
+/QA_models/triviaqa_dev
+/QA_models/triviaqa_train
